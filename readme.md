@@ -7,7 +7,7 @@ A CLI for generating and manipulating JWKs and JWKSes (is that even how you spel
 Make sure you have Go installed.
 
 ```
-go install github.com/palkerecsenyi/jwker
+go install github.com/palkerecsenyi/jwker@latest
 ```
 
 ## Usage

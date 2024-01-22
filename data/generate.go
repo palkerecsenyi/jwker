@@ -23,35 +23,53 @@ func (g RSAGenerator) GenerateKey() (interface{}, error) {
 	return rsa.GenerateKey(rand.Reader, g.Bits)
 }
 
-func Generate(generator KeyGenerator, includePublic bool) ([]byte, []byte, error) {
-	generatedKey, err := generator.GenerateKey()
+type KeyGeneratorOptions struct {
+	Generator               KeyGenerator
+	GeneratePublicComponent bool
+	WrapInJwks              OptionForEachComponent
+}
+
+func Generate(opt KeyGeneratorOptions) ([]byte, []byte, error) {
+	generatedKey, err := opt.Generator.GenerateKey()
 	if err != nil {
 		return nil, nil, fmt.Errorf("generate key: %s", err)
 	}
 
-	jwkKey, err := jwk.New(generatedKey)
+	privJwkKey, err := jwk.New(generatedKey)
 	if err != nil {
 		return nil, nil, fmt.Errorf("build jwk: %s", err)
 	}
 
-	rawJson, err := json.Marshal(jwkKey)
+	var privKeyToMarshal interface{}
+	privKeyToMarshal = privJwkKey
+	if opt.WrapInJwks.Private {
+		privKeyToMarshal = wrapInJwks(privJwkKey)
+	}
+
+	rawPrivJson, err := json.Marshal(privKeyToMarshal)
 	if err != nil {
 		return nil, nil, fmt.Errorf("stringify jwk: %s", err)
 	}
 
-	if includePublic {
-		publicJwkKey, err := jwkKey.PublicKey()
+	if opt.GeneratePublicComponent {
+		publicJwkKey, err := privJwkKey.PublicKey()
 		if err != nil {
 			return nil, nil, fmt.Errorf("build public jwk: %s", err)
 		}
 
-		rawPublicJson, err := json.Marshal(publicJwkKey)
+		var publicKeyToMarshal interface{}
+		publicKeyToMarshal = publicJwkKey
+		if opt.WrapInJwks.Public {
+			publicKeyToMarshal = wrapInJwks(publicJwkKey)
+		}
+
+		rawPublicJson, err := json.Marshal(publicKeyToMarshal)
 		if err != nil {
 			return nil, nil, fmt.Errorf("stringify public jwk: %s", err)
 		}
 
-		return rawJson, rawPublicJson, nil
+		return rawPrivJson, rawPublicJson, nil
 	}
 
-	return rawJson, nil, nil
+	return rawPrivJson, nil, nil
 }

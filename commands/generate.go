@@ -18,8 +18,14 @@ func Generate(ctx *cli.Context) error {
 		}
 	}
 
-	generatePublicKey := ctx.Bool("public")
-	privKeyBytes, pubKeyBytes, err := data.Generate(keyGen, generatePublicKey)
+	privKeyBytes, pubKeyBytes, err := data.Generate(data.KeyGeneratorOptions{
+		Generator:               keyGen,
+		GeneratePublicComponent: ctx.Bool("public"),
+		WrapInJwks: data.OptionForEachComponent{
+			Public:  ctx.Bool("public-jwks"),
+			Private: ctx.Bool("private-jwks"),
+		},
+	})
 	if err != nil {
 		return fmt.Errorf("generate key: %s", err)
 	}

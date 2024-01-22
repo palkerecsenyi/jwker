@@ -32,6 +32,13 @@ func main() {
 						Required: false,
 					},
 					&cli.BoolFlag{
+						Name: "private-jwks",
+						Value: false,
+						Usage: "Wrap the private key output in a JWKS",
+						Category: "Private Key Component",
+						Required: false,
+					},
+					&cli.BoolFlag{
 						Name: "public",
 						Usage: "If true, will generate a corresponding public JWK.",
 						Value: false,
@@ -51,11 +58,17 @@ func main() {
 						Category: "Public Key Component",
 						Required: false,
 					},
+					&cli.BoolFlag{
+						Name: "public-jwks",
+						Value: false,
+						Usage: "Wrap the public key output in a JWKS",
+						Category: "Public Key Component",
+						Required: false,
+					},
 					&cli.StringFlag{
 						Name:     "type",
 						Value:    "rsa",
 						Usage:    "Type of key to generate. Currently only 'rsa'.",
-						Required: true,
 					},
 					&cli.IntFlag{
 						Name:     "rsa-bits",

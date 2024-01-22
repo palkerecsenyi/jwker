@@ -44,5 +44,12 @@ func OutputJsonBytesToFile(jsonBytes []byte, format string, file string) error {
 		return fmt.Errorf("write to file: %s", err)
 	}
 
+	if fileToWrite == os.Stdout {
+		_, err = fileToWrite.WriteString("\n")
+		if err != nil {
+			return fmt.Errorf("write newline to stdout: %s", err)
+		}
+	}
+
 	return nil
 }

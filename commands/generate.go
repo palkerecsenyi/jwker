@@ -8,7 +8,76 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Generate(ctx *cli.Context) error {
+func GenerateSpec() *cli.Command {
+	return &cli.Command{
+		Name:    "generate",
+		Aliases: []string{"g"},
+		Usage:   "Generates a new JWK keypair",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "private-output",
+				Usage:    "File to save JWK to. If not provided, uses stdout.",
+				Category: "Private Key Component",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "private-format",
+				Value:    "json",
+				Usage:    "Format of output. See main help for formats.",
+				Category: "Private Key Component",
+				Required: false,
+			},
+			&cli.BoolFlag{
+				Name:     "private-jwks",
+				Value:    false,
+				Usage:    "Wrap the private key output in a JWKS",
+				Category: "Private Key Component",
+				Required: false,
+			},
+			&cli.BoolFlag{
+				Name:     "public",
+				Usage:    "If true, will generate a corresponding public JWK.",
+				Value:    false,
+				Category: "Public Key Component",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "public-output",
+				Usage:    "File to save public JWK to. If not provided, uses stdout (appending to the end of the private output, separated by a newline).",
+				Category: "Public Key Component",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "public-format",
+				Value:    "json",
+				Usage:    "Format of output for public JWK. See main help for formats.",
+				Category: "Public Key Component",
+				Required: false,
+			},
+			&cli.BoolFlag{
+				Name:     "public-jwks",
+				Value:    false,
+				Usage:    "Wrap the public key output in a JWKS",
+				Category: "Public Key Component",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:  "type",
+				Value: "rsa",
+				Usage: "Type of key to generate. Currently only 'rsa'.",
+			},
+			&cli.IntFlag{
+				Name:     "rsa-bits",
+				Value:    2048,
+				Usage:    "Bits to use for RSA key (if using RSA).",
+				Category: "RSA",
+			},
+		},
+		Action: generate,
+	}
+}
+
+func generate(ctx *cli.Context) error {
 	keyType := ctx.String("type")
 	var keyGen data.KeyGenerator
 	switch keyType {

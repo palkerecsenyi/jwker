@@ -7,14 +7,20 @@ import (
 	"os"
 )
 
+func base64Encode(bytes []byte, encoding *base64.Encoding) string {
+	b64Bytes := make([]byte, base64.StdEncoding.EncodedLen(len(bytes)))
+	encoding.Encode(b64Bytes, bytes)
+	return string(b64Bytes)
+}
+
 func OutputJsonBytes(jsonBytes []byte, format string) (string, error) {
 	switch format {
 	case "json":
 		return string(jsonBytes), nil
 	case "base64":
-		b64Bytes := make([]byte, base64.StdEncoding.EncodedLen(len(jsonBytes)))
-		base64.StdEncoding.Encode(b64Bytes, jsonBytes)
-		return string(b64Bytes), nil
+		return base64Encode(jsonBytes, base64.StdEncoding), nil
+	case "base64url":
+		return base64Encode(jsonBytes, base64.URLEncoding), nil
 	}
 
 	return "", fmt.Errorf("unrecognised format: %s", format)

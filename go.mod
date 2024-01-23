@@ -3,6 +3,7 @@ module github.com/palkerecsenyi/jwker
 go 1.21.5
 
 require (
+	github.com/google/uuid v1.5.0
 	github.com/lestrrat-go/jwx v1.2.28
 	github.com/urfave/cli/v2 v2.27.1
 )

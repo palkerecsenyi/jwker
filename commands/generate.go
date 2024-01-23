@@ -62,15 +62,41 @@ func GenerateSpec() *cli.Command {
 				Required: false,
 			},
 			&cli.StringFlag{
-				Name:  "type",
-				Value: "rsa",
-				Usage: "Type of key to generate. Currently only 'rsa'.",
+				Name:     "use",
+				Usage:    "The usage for the key. One of 'encryption', 'signing'.",
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "id-method",
+				Usage:    "Method for generating the key ID, or a custom value for the ID. Available methods: 'uuid', 'thumbprint'.",
+				Value:    "thumbprint",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "id-thumbprint",
+				Usage:    "If id-method is 'thumbprint', which thumbprint method to use. One of 'sha256', 'sha512'.",
+				Value:    "sha256",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "type",
+				Value:    "rsa",
+				Usage:    "Type of key to generate. One of 'rsa', 'ec', 'okp'.",
+				Required: false,
 			},
 			&cli.IntFlag{
 				Name:     "rsa-bits",
 				Value:    2048,
 				Usage:    "Bits to use for RSA key (if using RSA).",
 				Category: "RSA",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:     "ec-curve",
+				Value:    "P256",
+				Usage:    "Which elliptic curve to use for EC. One of 'P224', 'P256', 'P384', 'P521'.",
+				Category: "EC",
+				Required: false,
 			},
 		},
 		Action: generate,
@@ -85,18 +111,54 @@ func generate(ctx *cli.Context) error {
 		keyGen = data.RSAGenerator{
 			Bits: ctx.Int("rsa-bits"),
 		}
+	case "ec":
+		keyGen = data.ECGenerator{
+			CurveName: ctx.String("ec-curve"),
+		}
+	case "okp":
+		keyGen = data.OKPGenerator{}
+	default:
+		return fmt.Errorf("unknown or unsupported key generator %s", keyType)
 	}
 
-	privKeyBytes, pubKeyBytes, err := data.Generate(data.KeyGeneratorOptions{
+	keyUseInput := ctx.String("use")
+	var keyUse data.KeyUsage
+	switch keyUseInput {
+	case "encryption":
+		keyUse = data.KeyUsageEncryption
+	case "signature":
+		keyUse = data.KeyUsageSignature
+	default:
+		return fmt.Errorf("unknown key use: %s", keyUseInput)
+	}
+
+	keyGenOptions := data.KeyGeneratorOptions{
 		Generator:               keyGen,
 		GeneratePublicComponent: ctx.Bool("public"),
 		WrapInJwks: data.OptionForEachComponent{
 			Public:  ctx.Bool("public-jwks"),
 			Private: ctx.Bool("private-jwks"),
 		},
-	})
+		Usage: keyUse,
+	}
+
+	keyIdMethodInput := ctx.String("id-method")
+	keyGenOptions.IDMethod = keyIdMethodInput
+	if keyIdMethodInput == "thumbprint" {
+		keyThumbprintMethod := ctx.String("id-thumbprint")
+		switch keyThumbprintMethod {
+		case "sha256":
+			keyGenOptions.IDThumbprintMethod = data.KeyThumbprintSHA256
+		case "sha512":
+			keyGenOptions.IDThumbprintMethod = data.KeyThumbprintSHA512
+		default:
+			return fmt.Errorf("unknown key thumbprint: %s", keyThumbprintMethod)
+		}
+	}
+
+	privKeyBytes, pubKeyBytes, err := data.Generate(keyGenOptions)
 	if err != nil {
-		return fmt.Errorf("generate key: %s", err)
+		return err
 	}
 
 	privFormat := ctx.String("private-format")

@@ -72,12 +72,7 @@ func GenerateSpec() *cli.Command {
 				Value:    "thumbprint",
 				Required: false,
 			},
-			&cli.StringFlag{
-				Name:     "id-thumbprint",
-				Usage:    "If id-method is 'thumbprint', which thumbprint method to use. One of 'sha256', 'sha512'.",
-				Value:    "sha256",
-				Required: false,
-			},
+			thumbprintMethodFlag("id-thumbprint", false),
 			&cli.StringFlag{
 				Name:     "type",
 				Value:    "rsa",
@@ -145,14 +140,12 @@ func generate(ctx *cli.Context) error {
 	keyIdMethodInput := ctx.String("id-method")
 	keyGenOptions.IDMethod = keyIdMethodInput
 	if keyIdMethodInput == "thumbprint" {
-		keyThumbprintMethod := ctx.String("id-thumbprint")
-		switch keyThumbprintMethod {
-		case "sha256":
-			keyGenOptions.IDThumbprintMethod = data.KeyThumbprintSHA256
-		case "sha512":
-			keyGenOptions.IDThumbprintMethod = data.KeyThumbprintSHA512
-		default:
-			return fmt.Errorf("unknown key thumbprint: %s", keyThumbprintMethod)
+		var err error
+		keyGenOptions.IDThumbprintMethod, err = parseThumbprintMethod(
+			ctx.String("id-thumbprint"),
+		)
+		if err != nil {
+			return err
 		}
 	}
 

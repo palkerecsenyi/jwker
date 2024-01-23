@@ -3,20 +3,14 @@ package data
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/lestrrat-go/jwx/jwk"
 )
 
 func WrapParseFileIntoJWKs(ctx context.Context, fileName string) ([]jwk.Key, error) {
-	fileContents, err := os.ReadFile(fileName)
+	newJWKS, err := jwkSetFromFile(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("read file %s: %s", fileName, err)
-	}
-
-	newJWKS, err := jwk.Parse(fileContents)
-	if err != nil {
-		return nil, fmt.Errorf("parse JWK(S) in file %s: %s", fileName, err)
+		return nil, err
 	}
 
 	newJWKSIterator := newJWKS.Iterate(ctx)

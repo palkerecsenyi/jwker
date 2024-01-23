@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"encoding/base64"
 	"fmt"
+	"os"
 
 	"github.com/lestrrat-go/jwx/jwk"
 )
@@ -35,4 +36,18 @@ func keyThumbprintId(key jwk.Key, method KeyThumbprint) (string, error) {
 		return "", fmt.Errorf("generate thumbprint: %s", err)
 	}
 	return base64.URLEncoding.EncodeToString(thumbprint), nil
+}
+
+func jwkSetFromFile(fileName string) (jwk.Set, error) {
+	fileContents, err := os.ReadFile(fileName)
+	if err != nil {
+		return nil, fmt.Errorf("read file %s: %s", fileName, err)
+	}
+
+	jwks, err := jwk.Parse(fileContents)
+	if err != nil {
+		return nil, fmt.Errorf("parse JWK(S) in file %s: %s", fileName, err)
+	}
+
+	return jwks, nil
 }

@@ -17,6 +17,7 @@ func main() {
 		Commands: []*cli.Command{
 			commands.GenerateSpec(),
 			commands.WrapSpec(),
+			commands.ThumbprintSpec(),
 		},
 	}
 

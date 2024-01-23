@@ -121,7 +121,7 @@ func generate(ctx *cli.Context) error {
 	switch keyUseInput {
 	case "encryption":
 		keyUse = data.KeyUsageEncryption
-	case "signature":
+	case "signing":
 		keyUse = data.KeyUsageSignature
 	default:
 		return fmt.Errorf("unknown key use: %s", keyUseInput)
